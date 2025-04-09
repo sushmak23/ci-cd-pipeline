@@ -1,12 +1,49 @@
+# Task 4: Cleanup Task
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: cleanup
 spec:
+  description: |
+    This task cleans up the /workspace/output directory to prepare for a fresh run.
   steps:
     - name: cleanup-workspace
-      image: alpine
+      image: alpine:latest
       script: |
         #!/bin/sh
-        echo "Cleaning up workspace..."
-        rm -rf /workspace/output/*
+        set -e
+        echo "Starting cleanup of /workspace/output..."
+        if [ -d "/workspace/output" ]; then
+          rm -rf /workspace/output/*
+          echo "Cleanup complete."
+        else
+          echo "/workspace/output directory does not exist. Skipping cleanup."
+        fi
+
+---
+
+# Task 5: Run Nose Tests Task
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-nose-tests
+spec:
+  description: |
+    This task installs the nose testing framework and runs unit tests
+    to ensure the application behaves as expected.
+  steps:
+    - name: run-tests
+      image: python:3.9
+      script: |
+        #!/bin/sh
+        set -e
+        echo "Installing nose testing framework..."
+        pip install --no-cache-dir nose
+        echo "Running unit tests using nose..."
+        if nosetests; then
+          echo "All tests passed successfully."
+        else
+          echo "Some tests failed." >&2
+          exit 1
+        fi
+
